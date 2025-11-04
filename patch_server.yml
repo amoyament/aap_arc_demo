@@ -1,0 +1,41 @@
+---
+- name: Play One Prepare Server for Patching (Add to AD Group)
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Add server to Patching_Group in AD
+      microsoft.ad.group_membership:
+        name: 'Patching_Group'
+        members: "{{ inventory_hostname_short }}" # Use short hostname for AD
+        state: present
+
+- name: Play Two Apply Windows Security Updates
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Install security updates
+      ansible.windows.win_updates:
+        category_names:
+          - SecurityUpdates
+        state: installed
+        reboot: true # Module will handle reboot if needed
+      register: update_result
+
+    - name: Wait for server to potentially reboot and come back
+      wait_for_connection:
+        delay: 60
+        timeout: 600
+      when: update_result.reboot_required
+
+- name: play Three Restore Server (Remove from AD Group)
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Remove server from Patching_Group in AD
+      microsoft.ad.group_membership:
+        name: 'Patching_Group'
+        members: "{{ inventory_hostname_short }}"
+        state: absent

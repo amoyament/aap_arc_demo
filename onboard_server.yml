@@ -1,0 +1,57 @@
+---
+- name: Play One Join Server to Active Directory
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Join server to arc-demo.local domain
+      ansible.windows.win_domain_membership:
+        dns_domain_name: 'arc-demo.local'
+        domain_admin_user: 'arc-admin@arc-demo.local'
+        domain_admin_password: "{{ domain_admin_pass }}" # Will prompt if not in credential
+        domain_ou_path: "OU=Demo-Servers,DC=arc-demo,DC=local"
+        state: domain
+      register: domain_join_result
+
+    - name: Reboot server to apply domain changes
+      ansible.windows.win_reboot:
+      when: domain_join_result.reboot_required
+
+- name: Play Two Wait for Server to come back online
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Wait for 300 seconds for server to reboot
+      ansible.builtin.wait_for_connection:
+        delay: 30
+        timeout: 300
+
+- name: Play 3 Onboard Server to Azure Arc
+  hosts: all
+  gather_facts: false
+
+  vars:
+    azure_resource_group: "arc-demo-rg"
+    azure_location: "eastus" # Or your region
+
+  tasks:
+    - name: Download Azure Arc agent
+      ansible.windows.win_get_url:
+        url: https://aka.ms/AzureConnectedMachineAgent
+        dest: C:\Temp\AzureConnectedMachineAgent.msi
+
+    - name: Install and Connect Arc Agent
+      ansible.windows.win_shell: |
+        # 1 Install the Agent
+        msiexec.exe /i C:\Temp\AzureConnectedMachineAgent.msi /qn
+
+        # 2 Connect (Onboard) the Agent
+        & "C:\Program Files\AzureConnectedMachineAgent\azcmagent.exe" connect `
+          --service-principal-id "{{ lookup('env', 'AZURE_CLIENT_ID') }}" `
+          --service-principal-secret "{{ lookup('env', 'AZURE_CLIENT_SECRET') }}" `
+          --tenant-id "{{ lookup('env', 'AZURE_TENANT_ID') }}" `
+          --subscription-id "{{ lookup('env', 'AZURE_SUBSCRIPTION_ID') }}" `
+          --resource-group "{{ azure_resource_group }}" `
+          --location "{{ azure_location }}" `
+          --correlation-id "ansible-onboarding"
