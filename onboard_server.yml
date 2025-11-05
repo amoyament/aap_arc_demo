@@ -5,7 +5,7 @@
 
   tasks:
     - name: Join server to arc-demo.local domain
-      ansible.windows.win_domain_membership:
+      microsoft.ad.domain_membership:
         dns_domain_name: 'arc-demo.local'
         domain_admin_user: 'arc-admin@arc-demo.local'
         domain_admin_password: "{{ domain_admin_pass }}" # Will prompt if not in credential
