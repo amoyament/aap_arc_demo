@@ -4,7 +4,7 @@
   gather_facts: false
 
   tasks:
-    - name: Join server to arc-demo.local domain
+    - name: Join server to arc-demolocal domain
       microsoft.ad.domain_membership:
         dns_domain_name: 'arc-demo.local'
         domain_admin_user: 'arc-admin@arc-demo.local'

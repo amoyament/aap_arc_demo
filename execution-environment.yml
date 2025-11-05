@@ -1,0 +1,16 @@
+---
+version: 3
+
+images:
+  base_image:
+    name: 'registry.redhat.io/ansible-automation-platform-2.5/ee-supported-rhel8:latest'
+
+dependencies:
+  galaxy:
+    collections:
+      - ansible.windows
+      - azure.azcollection
+      - microsoft.ad
+  
+  python:
+    - requests-credssp

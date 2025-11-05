@@ -1,5 +1,0 @@
----
-collections:
-  - name: ansible.windows
-  - name: azure.azcollection
-  - name: microsoft.ad
