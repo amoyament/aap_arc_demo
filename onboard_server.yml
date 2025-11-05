@@ -8,7 +8,7 @@
       microsoft.ad.domain_membership:
         dns_domain_name: 'arc-demo.local'
         domain_admin_user: 'arc-admin@arc-demo.local'
-        domain_admin_password: "{{ domain_admin_pass }}" # Will prompt if not in credential
+        domain_admin_password: "{{ domain_pass }}" # Will prompt if not in credential
         domain_ou_path: "OU=Demo-Servers,DC=arc-demo,DC=local"
         state: domain
       register: domain_join_result
